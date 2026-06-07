@@ -9,6 +9,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
 } from '@/components/ui/breadcrumb'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: () => {
@@ -31,7 +32,8 @@ export const Route = createFileRoute('/dashboard')({
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-2">
+              <ThemeToggle />
               <NavUser />
             </div>
           </div>
