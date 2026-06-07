@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { AppSidebar } from '@/components/app-sidebar'
 import { NavUser } from '@/components/nav-user'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
@@ -10,12 +10,13 @@ import {
   BreadcrumbPage,
 } from '@/components/ui/breadcrumb'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { tokenStore } from '@/lib/token'
 
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: () => {
-    // if (!tokenStore.get()) {
-    //   throw redirect({ to: '/login' })
-    // }
+    if (!tokenStore.get()) {
+      throw redirect({ to: '/login' })
+    }
   },
   component: () => (
     <SidebarProvider>

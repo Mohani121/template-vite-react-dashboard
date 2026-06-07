@@ -1,73 +1,152 @@
-# React + TypeScript + Vite
+# template-vite-react-dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A production-ready frontend dashboard template built with Vite, React, and TypeScript. Clone it, configure your API URL, and start writing business logic immediately.
 
-Currently, two official plugins are available:
+Designed to pair with [template-nestjs-api](https://github.com/your-username/template-nestjs-api) but works with any REST API that follows the `ApiResponse<T>` shape.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+- **Vite** + **React** + **TypeScript**
+- **TailwindCSS v4** + **shadcn/ui** — single centralized styling system
+- **TanStack Router** — file-based routing
+- **TanStack Query** — server state management
+- **TanStack Form** — form state and validation
+- **Axios** — HTTP client with interceptors
+- **React Context + useReducer** — auth state
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
 
-## Expanding the ESLint configuration
+- Auth flow — login, register, logout with JWT access tokens
+- Silent token refresh on 401 via httpOnly refresh cookie
+- Protected routes with auth guard
+- Public routes with redirect if already authenticated
+- Dark / light / system theme toggle
+- Collapsible sidebar layout (shadcn sidebar-07)
+- Global `ApiResponse<T>` unwrapping in axios interceptors
+- ESLint + Prettier + Husky + lint-staged
+- GitHub Actions CI
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Project Structure
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+src/
+api/ # API call functions (auth, etc.)
+components/ # Shared UI components and sidebar
+context/ # React Context providers (auth, theme)
+hooks/ # Custom hooks (useAuth)
+lib/ # axios instance, token store, query client, utils
+routes/ # File-based routes
+\_auth/ # Public layout (login, register)
+dashboard/ # Protected layout (sidebar shell)
+types/ # Shared TypeScript types
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Getting Started
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 1. Clone the template
+
+```bash
+git clone https://github.com/your-username/template-vite-react-dashboard.git my-app
+cd my-app
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Install dependencies
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install
 ```
+
+### 3. Configure environment
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env`:
+
+```env
+VITE_API_BASE_URL=http://localhost:3000
+```
+
+### 4. Start development server
+
+```bash
+pnpm dev
+```
+
+## Available Scripts
+
+| Script            | Description                         |
+| ----------------- | ----------------------------------- |
+| `pnpm dev`        | Start development server            |
+| `pnpm build`      | Type-check and build for production |
+| `pnpm preview`    | Preview production build            |
+| `pnpm lint`       | Run ESLint                          |
+| `pnpm format`     | Format all files with Prettier      |
+| `pnpm type-check` | Run TypeScript type checker         |
+
+## API Contract
+
+This template expects the backend to return responses in this shape:
+
+```ts
+// Success
+{ success: true, data: T }
+
+// Error
+{ success: false, error: { code: string, message: string } }
+```
+
+The axios interceptor in `src/lib/axios.ts` unwraps this automatically — callers receive `data` directly.
+
+## Auth Flow
+
+1. User submits login/register form
+2. Backend returns `{ accessToken }` + sets httpOnly refresh cookie
+3. Access token stored in memory (`src/lib/token.ts`) — never in localStorage
+4. On 401, interceptor silently calls `POST /auth/refresh` using the cookie
+5. On refresh failure, user is redirected to `/login`
+
+## Extending the Template
+
+### Add a new dashboard page
+
+Create `src/routes/dashboard/your-page.tsx`:
+
+```tsx
+import { createFileRoute } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/dashboard/your-page')({
+  component: () => (
+    <div>
+      <h1 className="text-2xl font-semibold">Your Page</h1>
+    </div>
+  ),
+})
+```
+
+That's it — TanStack Router picks it up automatically.
+
+### Add a new API module
+
+Create `src/api/your-resource.ts`:
+
+```ts
+import { apiClient } from '@/lib/axios'
+import type { YourType } from '@/types'
+
+export const yourApi = {
+  async getAll(): Promise<YourType[]> {
+    const { data } = await apiClient.get<YourType[]>('/your-resource')
+    return data
+  },
+}
+```
+
+### Add shadcn components
+
+```bash
+pnpm dlx shadcn@latest add <component>
+```
+
+## License
+
+MIT
